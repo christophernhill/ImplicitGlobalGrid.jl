@@ -109,7 +109,10 @@ end
 
 @static if ENABLE_CUDA
     function register(buf::Array{T}) where T <: GGNumber
+        println("Hello")
+	# exit()
         rbuf = Mem.register(Mem.Host, pointer(buf), sizeof(buf), Mem.HOSTREGISTER_DEVICEMAP);
+        ## rbuf = Mem.register(Mem.Host, pointer(buf), sizeof(buf), Mem.HOSTREGISTER_DEVICEMAP | Mem.HOSTREGISTER_PORTABLE );
         rbuf_d = convert(CuPtr{T}, rbuf);
         return unsafe_wrap(CuArray, rbuf_d, size(buf)), rbuf;
     end

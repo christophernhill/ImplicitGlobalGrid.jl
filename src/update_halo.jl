@@ -93,10 +93,14 @@ let
     curecvbufs_raw_h = nothing
 
     function free_update_halo_buffers()
-        @enable_if_cuda if any(cudaaware_MPI()) free_cubufs(cusendbufs_raw) end
-        @enable_if_cuda if any(cudaaware_MPI()) free_cubufs(curecvbufs_raw) end
-        @enable_if_cuda if none(cudaaware_MPI()) unregister_cubufs(cusendbufs_raw_h) end
-        @enable_if_cuda if none(cudaaware_MPI()) unregister_cubufs(curecvbufs_raw_h) end
+        ### @enable_if_cuda if any(cudaaware_MPI()) free_cubufs(cusendbufs_raw) end
+        ### @enable_if_cuda if any(cudaaware_MPI()) free_cubufs(curecvbufs_raw) end
+        ### @enable_if_cuda if none(cudaaware_MPI()) unregister_cubufs(cusendbufs_raw_h) end
+        ### @enable_if_cuda if none(cudaaware_MPI()) unregister_cubufs(curecvbufs_raw_h) end
+        @enable_if_cuda if none(cudaaware_MPI()) free_cubufs(cusendbufs_raw) end
+        @enable_if_cuda if none(cudaaware_MPI()) free_cubufs(curecvbufs_raw) end
+        @enable_if_cuda if any(cudaaware_MPI()) unregister_cubufs(cusendbufs_raw_h) end
+        @enable_if_cuda if any(cudaaware_MPI()) unregister_cubufs(curecvbufs_raw_h) end
         sendbufs_raw = nothing;
         recvbufs_raw = nothing;
         cusendbufs_raw = nothing
@@ -146,7 +150,8 @@ let
             if (length(sendbufs_raw[i][1]) < max_halo_elems)
                 for n = 1:NNEIGHBORS_PER_DIM
                     reallocate_bufs(T, i, n, max_halo_elems);
-                    @enable_if_cuda if (is_cuarray(A) && none(cudaaware_MPI())) reregister_cubufs(T, i, n); end  # Host memory is page-locked (and mapped to device memory) to ensure optimal access performance (from kernel or with 3-D memcopy).
+                    # @enable_if_cuda if (is_cuarray(A) && none(cudaaware_MPI())) reregister_cubufs(T, i, n); end  # Host memory is page-locked (and mapped to device memory) to ensure optimal access performance (from kernel or with 3-D memcopy).
+                    @enable_if_cuda if (is_cuarray(A) && any(cudaaware_MPI())) reregister_cubufs(T, i, n); end  # Host memory is page-locked (and mapped to device memory) to ensure optimal access performance (from kernel or with 3-D memcopy).
                 end
                 GC.gc(); # Too small buffers had been replaced with larger ones; free the now unused memory.
             end
